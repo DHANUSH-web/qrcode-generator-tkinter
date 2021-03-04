@@ -1,0 +1,65 @@
+========================================
+Data: https://www.sololearn.com
+File: C:/Users/admin/Documents/C Languages/Python/QR-Code Generator/code.png
+Date: 04-03-2021
+Time: 21 : 17 : 42 PM
+========================================
+Data: https://www.atme.in
+File: C:/Users/admin/Documents/C Languages/Python/QR-Code Generator/code.png
+Date: 04-03-2021
+Time: 21 : 18 : 47 PM
+========================================
+Data: https://www.atme.in
+File: C:/Users/admin/Documents/C Languages/Python/QR-Code Generator/atme.png
+Date: 04-03-2021
+Time: 21 : 23 : 26 PM
+========================================
+Data: https://www.google.com
+File: C:/Users/admin/Documents/C Languages/Python/QR-Code Generator/google.png
+Date: 04-03-2021
+Time: 21 : 26 : 37 PM
+========================================
+Data: https://www.atme.in
+File: C:/Users/admin/Documents/C Languages/Python/QR-Code Generator/atme.png
+Date: 04-03-2021
+Time: 21 : 33 : 22 PM
+========================================
+Data: https://www.atme.in
+File: C:/Users/admin/Documents/C Languages/Python/QR-Code Generator/atme.png
+Date: 04-03-2021
+Time: 21 : 34 : 24 PM
+========================================
+Data: https://www.godaddy.com
+File: C:/Users/admin/Documents/C Languages/Python/QR-Code Generator/godaddy.png
+Date: 04-03-2021
+Time: 21 : 35 : 45 PM
+========================================
+Data: https://www.google.com
+File: C:/Users/admin/Dropbox/My PC (DESKTOP-QJN65G6)/Desktop/logo.png
+Date: 04-03-2021
+Time: 22 : 08 : 41 PM
+========================================
+Data: https://www.googe.com
+File: C:/Users/admin/Dropbox/My PC (DESKTOP-QJN65G6)/Desktop/logo.png
+Date: 04-03-2021
+Time: 22 : 11 : 37 PM
+========================================
+Data: https://www.google.com
+File: C:/Users/admin/Dropbox/My PC (DESKTOP-QJN65G6)/Desktop/logo.png
+Date: 04-03-2021
+Time: 22 : 14 : 19 PM
+========================================
+Data: https://www.google.com
+File: C:/Users/admin/Dropbox/My PC (DESKTOP-QJN65G6)/Desktop/google.png
+Date: 04-03-2021
+Time: 22 : 15 : 50 PM
+========================================
+Data: https://www.atme.in
+File: C:/Users/admin/Dropbox/My PC (DESKTOP-QJN65G6)/Desktop/atme.png
+Date: 04-03-2021
+Time: 22 : 24 : 40 PM
+========================================
+Data: https://www.atme.in
+File: C:/Users/admin/Dropbox/My PC (DESKTOP-QJN65G6)/Desktop/atme.png
+Date: 04-03-2021
+Time: 22 : 26 : 42 PM

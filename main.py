@@ -1,4 +1,4 @@
-"""Modern Tkinter utility app for QR code generation and text utilities."""
+"""Modern QR studio with Tkinter UI plus environment diagnostics."""
 
 from __future__ import annotations
 
@@ -6,15 +6,14 @@ import base64
 import csv
 import hashlib
 import json
-import os
+import argparse
+import importlib.util
+import sys
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from tkinter import filedialog, messagebox, StringVar, Tk
-from tkinter.scrolledtext import ScrolledText
+from typing import Any
 from urllib.parse import quote_plus, unquote_plus
-import tkinter as tk
-from tkinter import ttk
 
 try:
     import qrcode
@@ -43,7 +42,12 @@ class HistoryItem:
 
 
 class ModernQRStudio:
-    def __init__(self, root: Tk) -> None:
+    def __init__(self, root: Any, tk: Any, ttk: Any, filedialog: Any, messagebox: Any, scrolled_text_cls: Any) -> None:
+        self.tk = tk
+        self.ttk = ttk
+        self.filedialog = filedialog
+        self.messagebox = messagebox
+        self.scrolled_text_cls = scrolled_text_cls
         self.root = root
         self.root.title("Modern QR Studio")
         self.root.geometry("920x640")
@@ -52,14 +56,14 @@ class ModernQRStudio:
         self.preview_image = None
         self.history: list[HistoryItem] = []
 
-        self.payload_var = StringVar(value="")
-        self.filename_var = StringVar(value="qrcode")
-        self.fill_color_var = StringVar(value="#111111")
-        self.back_color_var = StringVar(value="#ffffff")
-        self.box_size_var = StringVar(value="10")
-        self.border_var = StringVar(value="4")
-        self.ec_var = StringVar(value="M")
-        self.batch_folder_var = StringVar(value=str(APP_DIR / "exports"))
+        self.payload_var = self.tk.StringVar(value="")
+        self.filename_var = self.tk.StringVar(value="qrcode")
+        self.fill_color_var = self.tk.StringVar(value="#111111")
+        self.back_color_var = self.tk.StringVar(value="#ffffff")
+        self.box_size_var = self.tk.StringVar(value="10")
+        self.border_var = self.tk.StringVar(value="4")
+        self.ec_var = self.tk.StringVar(value="M")
+        self.batch_folder_var = self.tk.StringVar(value=str(APP_DIR / "exports"))
 
         self._build_ui()
         self._load_history()
@@ -67,27 +71,27 @@ class ModernQRStudio:
     def _build_ui(self) -> None:
         self._build_styles()
 
-        wrapper = ttk.Frame(self.root, padding=12)
+        wrapper = self.ttk.Frame(self.root, padding=12)
         wrapper.pack(fill="both", expand=True)
 
-        title = ttk.Label(
+        title = self.ttk.Label(
             wrapper,
             text="Modern QR Studio",
             font=("Segoe UI", 20, "bold"),
         )
-        subtitle = ttk.Label(
+        subtitle = self.ttk.Label(
             wrapper,
             text="QR generation, batch exports, and practical text tools in one desktop app.",
         )
         title.pack(anchor="w")
         subtitle.pack(anchor="w", pady=(0, 8))
 
-        notebook = ttk.Notebook(wrapper)
+        notebook = self.ttk.Notebook(wrapper)
         notebook.pack(fill="both", expand=True)
 
-        self.generator_tab = ttk.Frame(notebook, padding=12)
-        self.tools_tab = ttk.Frame(notebook, padding=12)
-        self.history_tab = ttk.Frame(notebook, padding=12)
+        self.generator_tab = self.ttk.Frame(notebook, padding=12)
+        self.tools_tab = self.ttk.Frame(notebook, padding=12)
+        self.history_tab = self.ttk.Frame(notebook, padding=12)
 
         notebook.add(self.generator_tab, text="QR Generator")
         notebook.add(self.tools_tab, text="Utilities")
@@ -97,23 +101,22 @@ class ModernQRStudio:
         self._build_tools_tab()
         self._build_history_tab()
 
-    @staticmethod
-    def _build_styles() -> None:
-        style = ttk.Style()
+    def _build_styles(self) -> None:
+        style = self.ttk.Style()
         if "clam" in style.theme_names():
             style.theme_use("clam")
 
     def _build_generator_tab(self) -> None:
-        left = ttk.Frame(self.generator_tab)
-        right = ttk.Frame(self.generator_tab)
+        left = self.ttk.Frame(self.generator_tab)
+        right = self.ttk.Frame(self.generator_tab)
         left.pack(side="left", fill="both", expand=True, padx=(0, 10))
         right.pack(side="right", fill="y")
 
-        ttk.Label(left, text="Data / URL / Text", font=("Segoe UI", 11, "bold")).pack(anchor="w")
-        self.payload_text = ScrolledText(left, height=10, wrap="word")
+        self.ttk.Label(left, text="Data / URL / Text", font=("Segoe UI", 11, "bold")).pack(anchor="w")
+        self.payload_text = self.scrolled_text_cls(left, height=10, wrap="word")
         self.payload_text.pack(fill="x", pady=(4, 10))
 
-        form = ttk.LabelFrame(left, text="Customization", padding=10)
+        form = self.ttk.LabelFrame(left, text="Customization", padding=10)
         form.pack(fill="x")
 
         self._field(form, "Default file name", self.filename_var, row=0)
@@ -122,59 +125,58 @@ class ModernQRStudio:
         self._field(form, "Box size", self.box_size_var, row=3)
         self._field(form, "Border", self.border_var, row=4)
 
-        ttk.Label(form, text="Error correction").grid(row=5, column=0, sticky="w", pady=4)
-        ec = ttk.Combobox(form, textvariable=self.ec_var, values=["L", "M", "Q", "H"], state="readonly", width=8)
+        self.ttk.Label(form, text="Error correction").grid(row=5, column=0, sticky="w", pady=4)
+        ec = self.ttk.Combobox(form, textvariable=self.ec_var, values=["L", "M", "Q", "H"], state="readonly", width=8)
         ec.grid(row=5, column=1, sticky="w", padx=(8, 0), pady=4)
 
-        action_row = ttk.Frame(left)
+        action_row = self.ttk.Frame(left)
         action_row.pack(fill="x", pady=(10, 8))
-        ttk.Button(action_row, text="Generate QR", command=self.generate_qr).pack(side="left")
-        ttk.Button(action_row, text="Copy Payload", command=self.copy_payload).pack(side="left", padx=8)
-        ttk.Button(action_row, text="Clear", command=self.clear_payload).pack(side="left")
+        self.ttk.Button(action_row, text="Generate QR", command=self.generate_qr).pack(side="left")
+        self.ttk.Button(action_row, text="Copy Payload", command=self.copy_payload).pack(side="left", padx=8)
+        self.ttk.Button(action_row, text="Clear", command=self.clear_payload).pack(side="left")
 
-        batch = ttk.LabelFrame(left, text="Batch Export (CSV)", padding=10)
+        batch = self.ttk.LabelFrame(left, text="Batch Export (CSV)", padding=10)
         batch.pack(fill="x", pady=(8, 0))
-        ttk.Label(batch, text="CSV format: first column is payload, optional second column is filename").pack(anchor="w")
-        ttk.Entry(batch, textvariable=self.batch_folder_var).pack(fill="x", pady=6)
-        batch_actions = ttk.Frame(batch)
+        self.ttk.Label(batch, text="CSV format: first column is payload, optional second column is filename").pack(anchor="w")
+        self.ttk.Entry(batch, textvariable=self.batch_folder_var).pack(fill="x", pady=6)
+        batch_actions = self.ttk.Frame(batch)
         batch_actions.pack(fill="x")
-        ttk.Button(batch_actions, text="Choose Export Folder", command=self.choose_export_folder).pack(side="left")
-        ttk.Button(batch_actions, text="Run Batch Export", command=self.run_batch_export).pack(side="left", padx=8)
+        self.ttk.Button(batch_actions, text="Choose Export Folder", command=self.choose_export_folder).pack(side="left")
+        self.ttk.Button(batch_actions, text="Run Batch Export", command=self.run_batch_export).pack(side="left", padx=8)
 
-        preview_box = ttk.LabelFrame(right, text="Preview", padding=8)
+        preview_box = self.ttk.LabelFrame(right, text="Preview", padding=8)
         preview_box.pack(fill="both", expand=True)
-        self.preview_label = ttk.Label(preview_box, text="No preview yet", width=34)
+        self.preview_label = self.ttk.Label(preview_box, text="No preview yet", width=34)
         self.preview_label.pack(fill="both", expand=True)
 
-    @staticmethod
-    def _field(parent: ttk.Widget, label: str, variable: StringVar, row: int) -> None:
-        ttk.Label(parent, text=label).grid(row=row, column=0, sticky="w", pady=4)
-        ttk.Entry(parent, textvariable=variable).grid(row=row, column=1, sticky="ew", padx=(8, 0), pady=4)
+    def _field(self, parent: Any, label: str, variable: Any, row: int) -> None:
+        self.ttk.Label(parent, text=label).grid(row=row, column=0, sticky="w", pady=4)
+        self.ttk.Entry(parent, textvariable=variable).grid(row=row, column=1, sticky="ew", padx=(8, 0), pady=4)
         parent.columnconfigure(1, weight=1)
 
     def _build_tools_tab(self) -> None:
-        ttk.Label(self.tools_tab, text="Text Utilities", font=("Segoe UI", 11, "bold")).pack(anchor="w")
-        ttk.Label(self.tools_tab, text="Quickly transform text for common development and sharing tasks.").pack(anchor="w")
+        self.ttk.Label(self.tools_tab, text="Text Utilities", font=("Segoe UI", 11, "bold")).pack(anchor="w")
+        self.ttk.Label(self.tools_tab, text="Quickly transform text for common development and sharing tasks.").pack(anchor="w")
 
-        self.tool_input = ScrolledText(self.tools_tab, height=10, wrap="word")
+        self.tool_input = self.scrolled_text_cls(self.tools_tab, height=10, wrap="word")
         self.tool_input.pack(fill="x", pady=(8, 8))
 
-        btns = ttk.Frame(self.tools_tab)
+        btns = self.ttk.Frame(self.tools_tab)
         btns.pack(fill="x")
-        ttk.Button(btns, text="Base64 Encode", command=self.base64_encode).pack(side="left")
-        ttk.Button(btns, text="Base64 Decode", command=self.base64_decode).pack(side="left", padx=6)
-        ttk.Button(btns, text="URL Encode", command=self.url_encode).pack(side="left")
-        ttk.Button(btns, text="URL Decode", command=self.url_decode).pack(side="left", padx=6)
-        ttk.Button(btns, text="SHA256", command=self.sha256_hash).pack(side="left")
+        self.ttk.Button(btns, text="Base64 Encode", command=self.base64_encode).pack(side="left")
+        self.ttk.Button(btns, text="Base64 Decode", command=self.base64_decode).pack(side="left", padx=6)
+        self.ttk.Button(btns, text="URL Encode", command=self.url_encode).pack(side="left")
+        self.ttk.Button(btns, text="URL Decode", command=self.url_decode).pack(side="left", padx=6)
+        self.ttk.Button(btns, text="SHA256", command=self.sha256_hash).pack(side="left")
 
-        self.tool_output = ScrolledText(self.tools_tab, height=12, wrap="word")
+        self.tool_output = self.scrolled_text_cls(self.tools_tab, height=12, wrap="word")
         self.tool_output.pack(fill="both", expand=True, pady=(10, 0))
 
     def _build_history_tab(self) -> None:
-        ttk.Label(self.history_tab, text="Recent Exports", font=("Segoe UI", 11, "bold")).pack(anchor="w")
+        self.ttk.Label(self.history_tab, text="Recent Exports", font=("Segoe UI", 11, "bold")).pack(anchor="w")
 
         columns = ("time", "mode", "output")
-        self.history_tree = ttk.Treeview(self.history_tab, columns=columns, show="headings", height=18)
+        self.history_tree = self.ttk.Treeview(self.history_tab, columns=columns, show="headings", height=18)
         self.history_tree.heading("time", text="Time")
         self.history_tree.heading("mode", text="Mode")
         self.history_tree.heading("output", text="Output")
@@ -183,15 +185,14 @@ class ModernQRStudio:
         self.history_tree.column("output", width=560)
         self.history_tree.pack(fill="both", expand=True, pady=(6, 6))
 
-        actions = ttk.Frame(self.history_tab)
+        actions = self.ttk.Frame(self.history_tab)
         actions.pack(fill="x")
-        ttk.Button(actions, text="Refresh", command=self.refresh_history_view).pack(side="left")
-        ttk.Button(actions, text="Clear History", command=self.clear_history).pack(side="left", padx=8)
+        self.ttk.Button(actions, text="Refresh", command=self.refresh_history_view).pack(side="left")
+        self.ttk.Button(actions, text="Clear History", command=self.clear_history).pack(side="left", padx=8)
 
-    @staticmethod
-    def _check_dependencies() -> bool:
+    def _check_dependencies(self) -> bool:
         if qrcode is None or Image is None or ImageTk is None:
-            messagebox.showerror(
+            self.messagebox.showerror(
                 "Missing dependencies",
                 "Please install dependencies first: pip install -r requirements.txt",
             )
@@ -213,18 +214,18 @@ class ModernQRStudio:
 
         payload = self.payload_text.get("1.0", "end").strip()
         if not payload:
-            messagebox.showwarning("Missing data", "Please provide text/data to encode.")
+            self.messagebox.showwarning("Missing data", "Please provide text/data to encode.")
             return
 
         try:
             box_size = int(self.box_size_var.get())
             border = int(self.border_var.get())
         except ValueError:
-            messagebox.showerror("Invalid number", "Box size and border must be integers.")
+            self.messagebox.showerror("Invalid number", "Box size and border must be integers.")
             return
 
         file_name = self.filename_var.get().strip() or "qrcode"
-        save_path = filedialog.asksaveasfilename(
+        save_path = self.filedialog.asksaveasfilename(
             title="Save QR code",
             defaultextension=".png",
             initialfile=f"{file_name}.png",
@@ -247,7 +248,7 @@ class ModernQRStudio:
         self._update_preview(save_path)
 
         self._record_history("single", payload, save_path)
-        messagebox.showinfo("Saved", f"QR code saved to:\n{save_path}")
+        self.messagebox.showinfo("Saved", f"QR code saved to:\n{save_path}")
 
     def _update_preview(self, path: str) -> None:
         image = Image.open(path)
@@ -262,13 +263,13 @@ class ModernQRStudio:
         self.root.clipboard_clear()
         self.root.clipboard_append(payload)
         self.root.update()
-        messagebox.showinfo("Copied", "Payload copied to clipboard.")
+        self.messagebox.showinfo("Copied", "Payload copied to clipboard.")
 
     def clear_payload(self) -> None:
         self.payload_text.delete("1.0", "end")
 
     def choose_export_folder(self) -> None:
-        folder = filedialog.askdirectory(title="Choose export folder")
+        folder = self.filedialog.askdirectory(title="Choose export folder")
         if folder:
             self.batch_folder_var.set(folder)
 
@@ -276,7 +277,7 @@ class ModernQRStudio:
         if not self._check_dependencies():
             return
 
-        csv_file = filedialog.askopenfilename(title="Select CSV file", filetypes=[("CSV", "*.csv")])
+        csv_file = self.filedialog.askopenfilename(title="Select CSV file", filetypes=[("CSV", "*.csv")])
         if not csv_file:
             return
 
@@ -307,7 +308,7 @@ class ModernQRStudio:
                 count += 1
 
         self.refresh_history_view()
-        messagebox.showinfo("Batch export done", f"Generated {count} QR code(s) in {output_dir}")
+        self.messagebox.showinfo("Batch export done", f"Generated {count} QR code(s) in {output_dir}")
 
     def _set_tool_output(self, text: str) -> None:
         self.tool_output.delete("1.0", "end")
@@ -324,7 +325,7 @@ class ModernQRStudio:
         try:
             decoded = base64.b64decode(self._tool_text()).decode("utf-8")
         except Exception as exc:
-            messagebox.showerror("Decode error", str(exc))
+            self.messagebox.showerror("Decode error", str(exc))
             return
         self._set_tool_output(decoded)
 
@@ -365,7 +366,7 @@ class ModernQRStudio:
             self.history_tree.insert("", "end", values=(item.timestamp, item.mode, item.output_file))
 
     def clear_history(self) -> None:
-        if not messagebox.askyesno("Confirm", "Clear saved history?"):
+        if not self.messagebox.askyesno("Confirm", "Clear saved history?"):
             return
         self.history = []
         if HISTORY_FILE.exists():
@@ -373,11 +374,51 @@ class ModernQRStudio:
         self.refresh_history_view()
 
 
-def main() -> None:
-    root = tk.Tk()
-    app = ModernQRStudio(root)
+def run_doctor() -> int:
+    checks = {
+        "tkinter": importlib.util.find_spec("tkinter") is not None and importlib.util.find_spec("_tkinter") is not None,
+        "qrcode": importlib.util.find_spec("qrcode") is not None,
+        "Pillow": importlib.util.find_spec("PIL") is not None,
+    }
+    print("Dependency doctor report:")
+    for name, ok in checks.items():
+        print(f"- {name}: {'OK' if ok else 'MISSING'}")
+    if checks["tkinter"]:
+        print("UI should be launchable.")
+    else:
+        print("Tkinter missing: install a Python build with Tk support.")
+        print("macOS tip: python.org installer includes Tk. Homebrew Python may need a Tk-enabled rebuild.")
+    return 0 if all(checks.values()) else 1
+
+
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(description="Modern QR Studio")
+    parser.add_argument("--doctor", action="store_true", help="Check whether tkinter and optional dependencies are installed")
+    args = parser.parse_args(argv)
+
+    if args.doctor:
+        return run_doctor()
+
+    try:
+        import tkinter as tk
+        from tkinter import filedialog, messagebox, ttk
+        from tkinter.scrolledtext import ScrolledText
+    except Exception as exc:
+        print("Cannot launch UI because tkinter is not available in this Python environment.", file=sys.stderr)
+        print(f"Details: {exc}", file=sys.stderr)
+        print("Run `python main.py --doctor` for a full dependency report.", file=sys.stderr)
+        return 1
+
+    try:
+        root = tk.Tk()
+    except Exception as exc:
+        print("Cannot launch UI in this environment.", file=sys.stderr)
+        print(f"Details: {exc}", file=sys.stderr)
+        return 1
+    app = ModernQRStudio(root, tk, ttk, filedialog, messagebox, ScrolledText)
     root.mainloop()
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())

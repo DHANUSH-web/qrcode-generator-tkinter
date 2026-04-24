@@ -32,6 +32,14 @@ pip install -r requirements.txt
 python main.py
 ```
 
+If the UI cannot start, run:
+
+```bash
+python main.py --doctor
+```
+
+This checks whether `tkinter`, `qrcode`, and `Pillow` are available. If `_tkinter` is missing on your machine, install a Python build that includes Tk support and re-run the doctor command.
+
 ## Batch CSV format
 
 CSV rows:
